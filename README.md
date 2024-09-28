@@ -1,1 +1,84 @@
 # Movie-recommendation-system
+
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 17,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9ALHPmhlFQRZ",
+        "outputId": "78ffc870-f941-4a99-d405-d6c5b84bf7e2"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Movie 'Four Rooms' not found in the dataset.\n"
+          ]
+        }
+      ],
+      "source": [
+        "#import libraries\n",
+        "import pandas as pd\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.metrics.pairwise import cosine_similarity\n",
+        "\n",
+        "# data Source\n",
+        "url = \"https://raw.githubusercontent.com/YBI-Foundation/Dataset/main/Movies%20Recommendation.csv\"\n",
+        "movies_data = pd.read_csv(url)\n",
+        "\n",
+        "#selecting keywords from data\n",
+        "movies_data[\"Movie_Title\"] = movies_data[\"Movie_Genre\"] + \" \" + movies_data[\"Movie_Keywords\"]\n",
+        "# cleaning data\n",
+        "movies_data[\"Movie_Title\"] = movies_data[\"Movie_Title\"].fillna(\"\")\n",
+        "\n",
+        "#create TF-IDF vectorizer\n",
+        "tfidf_vectorizer = TfidfVectorizer(stop_words=\"english\")\n",
+        "tfidf_matrix = tfidf_vectorizer.fit_transform(movies_data[\"Movie_Title\"])\n",
+        "\n",
+        "# Calculate cosine similarity\n",
+        "cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)\n",
+        "\n",
+        "# Function to get Recommendation\n",
+        "\n",
+        "def get_recommendations(movie_title):\n",
+        "  if movie_title in movies_data[\"Movie_Title\"].values:\n",
+        "    index = movies_data[movies_data[\"Movie_Title\"] == movie_title].index[0]\n",
+        "    similarity_scores = list(enumerate(cosine_sim[index]))\n",
+        "    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)\n",
+        "    top_similar_movies = similarity_scores[1:6]  # Get top 5 similar movies\n",
+        "    return top_similar_movies\n",
+        "  else:\n",
+        "    return []\n",
+        "\n",
+        "# Example usage\n",
+        "movie_to_recommend = \"Four Rooms\"\n",
+        "recommendations = get_recommendations(movie_to_recommend)\n",
+        "if recommendations:\n",
+        "    print(\"Recommendations for\", movie_to_recommend)\n",
+        "    for i, (index, similarity) in enumerate(recommendations):\n",
+        "        print(i+1, movies_data[\"Movie_Title\"].iloc[index], similarity)\n",
+        "else:\n",
+        "    print(f\"Movie '{movie_to_recommend}' not found in the dataset.\")"
+      ]
+    }
+  ]
+}
